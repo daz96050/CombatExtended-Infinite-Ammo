@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+    <!-- Mod Settings -->
+    <CEInfiniteAmmo_ModName>CE Infinite Ammo</CEInfiniteAmmo_ModName>
+    
+    <!-- Settings Headers -->
+    <CEInfiniteAmmo_Settings_Header>Infinite Ammo Settings</CEInfiniteAmmo_Settings_Header>
+    
+    <!-- Infinite Ammo (No Reload) -->
+    <CEInfiniteAmmo_InfiniteAmmo_Title>Infinite Ammo (No Reloading)</CEInfiniteAmmo_InfiniteAmmo_Title>
+    <CEInfiniteAmmo_InfiniteAmmo_Desc>Weapons do not consume any ammo as long as you have that ammo type in your inventory.</CEInfiniteAmmo_InfiniteAmmo_Desc>
+    
+    <!-- Infinite Reserve -->
+    <CEInfiniteAmmo_InfiniteReserve_Title>Infinite Reserve (With Reloading)</CEInfiniteAmmo_InfiniteReserve_Title>
+    <CEInfiniteAmmo_InfiniteReserve_Desc>Weapons do not consume any ammo from the inventory but still need to reload. You have infinite reserve ammo as long as there is one in your inventory.</CEInfiniteAmmo_InfiniteReserve_Desc>
+    
+    <!-- Infinite Turret Ammo -->
+    <CEInfiniteAmmo_InfiniteTurretAmmo_Title>Infinite Turret Ammo</CEInfiniteAmmo_InfiniteTurretAmmo_Title>
+    <CEInfiniteAmmo_InfiniteTurretAmmo_Desc>Turrets never run out of ammo. They still need to be loaded once initially.</CEInfiniteAmmo_InfiniteTurretAmmo_Desc>
+    
+    <!-- Infinite Grenades -->
+    <CEInfiniteAmmo_InfiniteGrenades_Title>Infinite Grenades / Thrown Weapons</CEInfiniteAmmo_InfiniteGrenades_Title>
+    <CEInfiniteAmmo_InfiniteGrenades_Desc>Thrown weapons like grenades are not consumed on use.</CEInfiniteAmmo_InfiniteGrenades_Desc>
+    
+    <!-- Player Only -->
+    <CEInfiniteAmmo_PlayerOnly_Title>Player Faction Only</CEInfiniteAmmo_PlayerOnly_Title>
+    <CEInfiniteAmmo_PlayerOnly_Desc>Infinite ammo settings only apply to player-controlled pawns and turrets. Enemy factions will still consume ammo normally.</CEInfiniteAmmo_PlayerOnly_Desc>
+
+    <CEInfiniteAmmo_BalanceMode_Title>Enable Ammo Rebalance</CEInfiniteAmmo_BalanceMode_Title>
+    <CEInfiniteAmmo_BalanceMode_Desc>Changes ammo recipes to yield 1 item.</CEInfiniteAmmo_BalanceMode_Desc>
+    <CEInfiniteAmmo_BalanceCost_Title>Ammo Recipe Cost Multiplier</CEInfiniteAmmo_BalanceCost_Title>
+</LanguageData>
