@@ -1,4 +1,7 @@
 # Combat Extended - Infinite Ammo
+
+![tenor](https://github.com/user-attachments/assets/ec3919dc-1495-4aba-bb1c-ed9b6243f9d3)
+
 Infinite ammo mod for the Combat Extended mod, and some small attempts to at least balance this thing (just a little bit).
 This mod plans to give all Combat Extended weapons infinite ammo in various modes.
 
