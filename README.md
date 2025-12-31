@@ -28,6 +28,10 @@ This is an inherently unbalanced mod. From my testing, I've found Infinite Reser
 Turret infinite ammo is fine, but mortars are absolutely disgusting with infinite ammo.
 This mod will not attempt to balance anymore.
 
+## Compatibility
+Compatible with all CE weapon/ammo mods.
+Compatible with most inventory management mods.
+
 ## Building
 You will be required to have [Combat Extended](https://github.com/CombatExtended-Continued/CombatExtended) in the same parent folder to compile this. Run dotnet compile in the source folder, it should just work.
 
