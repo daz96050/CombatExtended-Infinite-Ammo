@@ -14,7 +14,7 @@ Please look at the original [here](https://github.com/CombatExtended-Continued/C
 - Makes all guns infinite just like vanilla, every gun can shoot infinitely as long as you have one ammo type in your inventory.
 ### Infinite Reserve - With Reloading
 - Toggleable.
-- Makes all guns infinite, but you have a mag size. You will still be required to reload as long as you have one ammo type in your inventory. Any ammo loaded will not be consumed from your inventoory at all.
+- Makes all guns infinite, but you have a mag size. You will still be required to reload as long as you have one ammo type in your inventory. Any ammo loaded will not be consumed from your inventory at all.
 ### Infinite Turret Ammo
 - Toggleable.
 - Makes turrets have infinite ammo. You just need to load it with one round and it will be able to fire it forever.
