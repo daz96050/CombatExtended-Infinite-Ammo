@@ -3,7 +3,7 @@ Assemblies/CombatExtendedInfiniteAmmo.dll
 *.cache
 */Thumbs.db
 /Source/.vs/*
-Source/*/obj/*
+Source/obj/*
 Source/*/bin/*
 /Source/*/*.csproj.user
 .vscode
