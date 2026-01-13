@@ -7,7 +7,7 @@
     <supportedVersions>
         <li>1.6</li>
     </supportedVersions>
-    <modVersion>1.0.0</modVersion>
+    <modVersion>1.1.0</modVersion>
     <modIconPath IgnoreIfNoMatchingField="True">UI/Icons/CE_ModIcon_JustHat</modIconPath>
     <description>Infinite ammo!
 
@@ -18,8 +18,10 @@ Features:
 - Infinite Ammo (No Reloading) 
 - Infinite Reserve (With Reloading) 
 - Infinite Turret Ammo 
-- Infinite Grenades command:workbench.trust.manage
+- Infinite Grenades
 - Player Faction Only option
+- Limit ammo stacks to 1
+- Only spawn 1 of any ammo from spawns.
 
 Load this mod AFTER Combat Extended.
 
