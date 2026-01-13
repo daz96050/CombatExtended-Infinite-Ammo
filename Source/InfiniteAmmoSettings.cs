@@ -13,9 +13,12 @@ public class InfiniteAmmoSettings : ModSettings
     public bool playerFactionOnly = true;
     public bool enableBalancing = false;
     public float ammoCostMultiplier = 5f;
+    public bool limitAmmoStackSize = true;
+    public bool limitAmmoSpawns = true;
     
     private bool _prevEnableBalancing = false;
     private float _prevAmmoCostMultiplier = 5f;
+    private bool _prevLimitAmmoStackSize = true;
     
     public override void ExposeData()
     {
@@ -27,10 +30,14 @@ public class InfiniteAmmoSettings : ModSettings
         Scribe_Values.Look(ref playerFactionOnly, "playerFactionOnly", true);
         Scribe_Values.Look(ref enableBalancing, "enableBalancing", false);
         Scribe_Values.Look(ref ammoCostMultiplier, "ammoCostMultiplier", 5f);
+        Scribe_Values.Look(ref limitAmmoStackSize, "limitAmmoStackSize", true);
+        Scribe_Values.Look(ref limitAmmoSpawns, "limitAmmoSpawns", true);
         
         _prevEnableBalancing = enableBalancing;
         _prevAmmoCostMultiplier = ammoCostMultiplier;
+        _prevLimitAmmoStackSize = limitAmmoStackSize;
     }
+
     
     public void DoSettingsWindowContents(Rect inRect)
     {
@@ -90,6 +97,20 @@ public class InfiniteAmmoSettings : ModSettings
         
         if (enableBalancing)
         {
+            // Sub-options for balancing
+            list.CheckboxLabeled(
+                "CEInfiniteAmmo_LimitStackSize_Title".Translate(), 
+                ref limitAmmoStackSize, 
+                "CEInfiniteAmmo_LimitStackSize_Desc".Translate()
+            );
+            
+            list.CheckboxLabeled(
+                "CEInfiniteAmmo_LimitSpawns_Title".Translate(), 
+                ref limitAmmoSpawns, 
+                "CEInfiniteAmmo_LimitSpawns_Desc".Translate()
+            );
+            
+            list.Gap();
             list.Label(
                 "CEInfiniteAmmo_BalanceCost_Title".Translate() + ": " + ammoCostMultiplier.ToString("0.0") + "x"
             );
@@ -98,11 +119,17 @@ public class InfiniteAmmoSettings : ModSettings
         
         list.End();
         
-        if (enableBalancing != _prevEnableBalancing || ammoCostMultiplier != _prevAmmoCostMultiplier)
+        bool settingsChanged = enableBalancing != _prevEnableBalancing || 
+                               ammoCostMultiplier != _prevAmmoCostMultiplier ||
+                               limitAmmoStackSize != _prevLimitAmmoStackSize;
+        
+        if (settingsChanged)
         {
             _prevEnableBalancing = enableBalancing;
             _prevAmmoCostMultiplier = ammoCostMultiplier;
+            _prevLimitAmmoStackSize = limitAmmoStackSize;
             AmmoRecipeManager.ApplyRecipeChanges();
+            AmmoBalanceManager.ApplyBalanceChanges();
         }
     }
 }

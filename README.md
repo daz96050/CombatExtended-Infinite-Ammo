@@ -19,18 +19,23 @@ Please look at the original [here](https://github.com/CombatExtended-Continued/C
 - Toggleable.
 - Makes turrets have infinite ammo. You just need to load it with one round and it will be able to fire it forever.
 ### Ammo Balancing
-- Toggleable.
-- Makes it so you only craft 1 piece of ammo at a time.
-- A separate slider in here to also multiply the work / resource cost of ammo.
+- Recipes now yield 1 ammo at a time with multiplier for work and resource costs.
+- Changes all ammo types to have the stack limit of 1.
+- Limits traders to sell at most 1-3 of any ammo.
+- All ammo spawns (raids, drops, inside raiders) are capped to 1.
+- All these are toggleable.
 
 ## Balance
-This is an inherently unbalanced mod. From my testing, I've found Infinite Reserve the best mode to play while having some balance, with ammo balancing on. \
-Turret infinite ammo is fine, but mortars are absolutely disgusting with infinite ammo.
-This mod will not attempt to balance anymore.
+With ammo balancing enabled, the mod now provides a much more balanced experience:
+- Since you only need 1 bullet to have infinite ammo, you only get 1 bullet from various sources.
+- Market values reflect the actual cost of crafting a single bullet, not inflated recipe costs.
+- Traders won't flood you with hundreds of free infinite ammo.
+
+Recommended setup: **Infinite Reserve** mode with all **Ammo Balancing** settings enabled. This gives you realistic reloading with infinite reserve ammo, while keeping the economy intact.
 
 ## Compatibility
 Compatible with all CE weapon/ammo mods.
-Compatible with most inventory management mods.
+Probably incompatible with mods that changes stack sizes. If there are problems, try turning off certain settings.
 
 ## Building
 You will be required to have [Combat Extended](https://github.com/CombatExtended-Continued/CombatExtended) in the same parent folder to compile this. Run dotnet compile in the source folder, it should just work.
