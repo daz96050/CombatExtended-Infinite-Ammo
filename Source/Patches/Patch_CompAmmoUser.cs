@@ -43,6 +43,38 @@ public static class AmmoInventoryHelper
         
         return inventory.FirstOrDefault(t => t.def == ammoDef);
     }
+    
+    // Check if this comp belongs to an eligible pawn (faction check + not turret)
+    public static bool IsEligibleForInfiniteAmmo(CompAmmoUser comp, InfiniteAmmoSettings settings)
+    {
+        if (comp == null || settings == null) return false;
+        
+        bool isTurret = comp.turret != null;
+        
+        if (settings.playerFactionOnly)
+        {
+            Faction playerFaction = Faction.OfPlayer;
+            if (isTurret && comp.turret.Faction != playerFaction) return false;
+            if (!isTurret && comp.Wielder?.Faction != playerFaction) return false;
+        }
+        
+        return true;
+    }
+    
+    // Check if pawn is eligible for player-faction infinite ammo (non-turret)
+    public static bool IsPlayerPawnEligible(CompAmmoUser comp, InfiniteAmmoSettings settings)
+    {
+        if (comp == null || settings == null) return false;
+        if (comp.turret != null) return false;
+        if (!settings.infiniteAmmo) return false;
+        
+        if (settings.playerFactionOnly)
+        {
+            if (comp.Wielder?.Faction != Faction.OfPlayer) return false;
+        }
+        
+        return true;
+    }
 }
 
 [HarmonyPatch(typeof(CompAmmoUser), nameof(CompAmmoUser.Notify_ShotFired))]
@@ -55,12 +87,8 @@ public static class Patch_CompAmmoUser_Notify_ShotFired
         
         bool isTurret = __instance.turret != null;
         
-        if (settings.playerFactionOnly)
-        {
-            Faction playerFaction = Faction.OfPlayer;
-            if (isTurret && __instance.turret.Faction != playerFaction) return true;
-            if (!isTurret && __instance.Wielder?.Faction != playerFaction) return true;
-        }
+        if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
+            return true;
         
         if (isTurret && settings.infiniteTurretAmmo && __instance.CurMagCount > 0)
         {
@@ -69,11 +97,8 @@ public static class Patch_CompAmmoUser_Notify_ShotFired
         
         if (!isTurret && settings.infiniteAmmo)
         {
-            AmmoDef currentAmmo = __instance.CurrentAmmo;
-            if (currentAmmo != null && AmmoInventoryHelper.HasSpecificAmmoInInventory(__instance, currentAmmo))
-            {
-                return false;
-            }
+            // Don't consume ammo at all - just prevent the shot from reducing mag count
+            return false;
         }
         
         return true;
@@ -90,12 +115,8 @@ public static class Patch_CompAmmoUser_TryStartReload
         
         bool isTurret = __instance.turret != null;
         
-        if (settings.playerFactionOnly)
-        {
-            Faction playerFaction = Faction.OfPlayer;
-            if (isTurret && __instance.turret.Faction != playerFaction) return true;
-            if (!isTurret && __instance.Wielder?.Faction != playerFaction) return true;
-        }
+        if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
+            return true;
         
         if (isTurret && settings.infiniteTurretAmmo && __instance.HasMagazine)
         {
@@ -105,13 +126,14 @@ public static class Patch_CompAmmoUser_TryStartReload
         
         if (!isTurret && settings.infiniteAmmo && __instance.HasMagazine)
         {
+            // Set to selected ammo type (or keep current) and fill magazine
             AmmoDef selectedAmmo = __instance.SelectedAmmo;
-            if (selectedAmmo != null && AmmoInventoryHelper.HasSpecificAmmoInInventory(__instance, selectedAmmo))
+            if (selectedAmmo != null)
             {
                 __instance.CurrentAmmo = selectedAmmo;
-                __instance.CurMagCount = __instance.MagSize;
-                return false;
             }
+            __instance.CurMagCount = __instance.MagSize;
+            return false;
         }
         
         return true;
@@ -126,14 +148,10 @@ public static class Patch_CompAmmoUser_HasAmmo
         var settings = CombatExtendedInfiniteAmmoMod.Settings;
         if (settings == null) return;
         
-        bool isTurret = __instance.turret != null;
+        if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
+            return;
         
-        if (settings.playerFactionOnly)
-        {
-            Faction playerFaction = Faction.OfPlayer;
-            if (isTurret && __instance.turret.Faction != playerFaction) return;
-            if (!isTurret && __instance.Wielder?.Faction != playerFaction) return;
-        }
+        bool isTurret = __instance.turret != null;
         
         if (isTurret && settings.infiniteTurretAmmo)
         {
@@ -143,15 +161,7 @@ public static class Patch_CompAmmoUser_HasAmmo
         
         if (!isTurret && settings.infiniteAmmo)
         {
-            AmmoDef currentAmmo = __instance.CurrentAmmo;
-            if (currentAmmo != null && AmmoInventoryHelper.HasSpecificAmmoInInventory(__instance, currentAmmo))
-            {
-                __result = true;
-            }
-            else if (currentAmmo == null && AmmoInventoryHelper.HasAnyAmmoInInventory(__instance))
-            {
-                __result = true;
-            }
+            __result = true;
         }
     }
 }
@@ -166,16 +176,13 @@ public static class Patch_CompAmmoUser_LoadAmmo
         
         bool isTurret = __instance.turret != null;
         
-        if (settings.playerFactionOnly)
-        {
-            Faction playerFaction = Faction.OfPlayer;
-            if (isTurret && __instance.turret.Faction != playerFaction) return true;
-            if (!isTurret && __instance.Wielder?.Faction != playerFaction) return true;
-        }
+        if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
+            return true;
         
         bool useNoConsume = !isTurret && (settings.infiniteReserve || settings.infiniteAmmo);
         if (!useNoConsume || !__instance.UseAmmo) return true;
         
+        // Determine the ammo type to load - don't require it to be in inventory
         AmmoDef ammoToLoad = null;
         
         if (ammo != null)
@@ -184,17 +191,19 @@ public static class Patch_CompAmmoUser_LoadAmmo
         }
         else
         {
+            // Try selected ammo first, then current ammo, then find any
             AmmoDef selectedAmmo = __instance.SelectedAmmo;
-            if (selectedAmmo != null && AmmoInventoryHelper.HasSpecificAmmoInInventory(__instance, selectedAmmo))
+            if (selectedAmmo != null)
             {
                 ammoToLoad = selectedAmmo;
             }
-            else
+            else if (__instance.CurrentAmmo != null)
             {
-                if (__instance.TryFindAmmoInInventory(out Thing foundAmmo))
-                {
-                    ammoToLoad = foundAmmo.def as AmmoDef;
-                }
+                ammoToLoad = __instance.CurrentAmmo;
+            }
+            else if (__instance.TryFindAmmoInInventory(out Thing foundAmmo))
+            {
+                ammoToLoad = foundAmmo.def as AmmoDef;
             }
         }
         
@@ -235,16 +244,43 @@ public static class Patch_CompAmmoUser_TryUnload
         
         bool isTurret = __instance.turret != null;
         
-        if (settings.playerFactionOnly)
-        {
-            Faction playerFaction = Faction.OfPlayer;
-            if (isTurret && __instance.turret.Faction != playerFaction) return true;
-            if (!isTurret && __instance.Wielder?.Faction != playerFaction) return true;
-        }
+        if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
+            return true;
         
         if (!isTurret && (settings.infiniteReserve || settings.infiniteAmmo))
         {
             __instance.CurMagCount = 0;
+            __result = true;
+            return false;
+        }
+        
+        return true;
+    }
+}
+
+// Prevent ammo from being consumed from inventory when preparing a shot
+[HarmonyPatch(typeof(CompAmmoUser), nameof(CompAmmoUser.TryPrepareShot))]
+public static class Patch_CompAmmoUser_TryPrepareShot
+{
+    public static bool Prefix(CompAmmoUser __instance, ref bool __result)
+    {
+        var settings = CombatExtendedInfiniteAmmoMod.Settings;
+        if (settings == null) return true;
+        
+        bool isTurret = __instance.turret != null;
+        
+        if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
+            return true;
+        
+        if (isTurret && settings.infiniteTurretAmmo)
+        {
+            __result = true;
+            return false;
+        }
+        
+        if (!isTurret && settings.infiniteAmmo)
+        {
+            // Always allow the shot without consuming inventory ammo
             __result = true;
             return false;
         }
@@ -263,10 +299,8 @@ public static class Patch_CompAmmoUser_MagSize
         
         bool isTurret = __instance.turret != null;
         
-        if (settings.playerFactionOnly)
-        {
-            if (isTurret && __instance.turret.Faction != Faction.OfPlayer) return true;
-        }
+        if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
+            return true;
         
         if (isTurret && settings.infiniteTurretAmmo)
         {
