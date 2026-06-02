@@ -11,6 +11,30 @@ namespace CombatExtendedInfiniteAmmo.Patches;
 
 public static class AmmoInventoryHelper
 {
+    public static bool IsMortar(Building_Turret turret)
+    {
+        if (turret == null) return false;
+        return turret.def.building != null && turret.def.building.IsMortar;
+    }
+    
+    /// <summary>
+    /// Check if the turret qualifies for infinite turret ammo (excludes mortars).
+    /// </summary>
+    public static bool IsInfiniteTurret(CompAmmoUser comp, InfiniteAmmoSettings settings)
+    {
+        if (comp?.turret == null || !settings.infiniteTurretAmmo) return false;
+        return !IsMortar(comp.turret);
+    }
+    
+    /// <summary>
+    /// Check if the turret is a mortar that qualifies for infinite mortar ammo.
+    /// </summary>
+    public static bool IsInfiniteMortar(CompAmmoUser comp, InfiniteAmmoSettings settings)
+    {
+        if (comp?.turret == null || !settings.infiniteMortarAmmo) return false;
+        return IsMortar(comp.turret);
+    }
+    
     // Check if pawn has ANY compatible ammo in inventory
     public static bool HasAnyAmmoInInventory(CompAmmoUser comp)
     {
@@ -46,7 +70,7 @@ public static class AmmoInventoryHelper
         return inventory.FirstOrDefault(t => t.def == ammoDef);
     }
     
-    // Check if this comp belongs to an eligible pawn (faction check + not turret)
+    // Check if this comp belongs to an eligible pawn/turret (faction check)
     public static bool IsEligibleForInfiniteAmmo(CompAmmoUser comp, InfiniteAmmoSettings settings)
     {
         if (comp == null || settings == null) return false;
@@ -92,18 +116,20 @@ public static class Patch_CompAmmoUser_Notify_ShotFired
         if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
             return true;
         
-        if (isTurret && settings.infiniteTurretAmmo && __instance.CurMagCount > 0)
+        // Infinite turret: never deplete
+        if (isTurret && AmmoInventoryHelper.IsInfiniteTurret(__instance, settings) && __instance.CurMagCount > 0)
         {
             return false;
         }
         
-        if (!isTurret && settings.infiniteAmmo)
+        // Infinite mortar: never deplete (ammo was consumed on load)
+        if (isTurret && AmmoInventoryHelper.IsInfiniteMortar(__instance, settings) && __instance.CurMagCount > 0)
         {
-            // Don't consume ammo at all - just prevent the shot from reducing mag count
             return false;
         }
-        
-        return true;
+
+        // Infinite ammo for pawns: never deplete mag
+        return isTurret || !settings.infiniteAmmo;
     }
 }
 
@@ -112,22 +138,37 @@ public static class Patch_CompAmmoUser_TryStartReload
 {
     public static bool Prefix(CompAmmoUser __instance)
     {
-        var settings = CombatExtendedInfiniteAmmoMod.Settings;
+        InfiniteAmmoSettings settings = CombatExtendedInfiniteAmmoMod.Settings;
         if (settings == null) return true;
         
         bool isTurret = __instance.turret != null;
         
         if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
             return true;
-        
-        if (isTurret && settings.infiniteTurretAmmo && __instance.HasMagazine)
+
+        if (isTurret &&
+            // Infinite turret (non-mortar): instant refill
+            AmmoInventoryHelper.IsInfiniteTurret(__instance, settings) && __instance.HasMagazine)
         {
             __instance.CurMagCount = __instance.MagSize;
             return false;
         }
-        
-        // For both infiniteAmmo and infiniteReserve, let the normal reload flow happen
-        // (TryUnload and LoadAmmo are patched to not consume/return ammo)
+        // Infinite mortar: if same ammo type selected, instant refill
+        // If different ammo type selected, fall through to normal reload (consumes new ammo, returns old)
+        else if (isTurret && (AmmoInventoryHelper.IsInfiniteMortar(__instance, settings) && __instance.HasMagazine))
+        {
+            AmmoDef selected = __instance.SelectedAmmo;
+            AmmoDef current = __instance.CurrentAmmo;
+
+            // Same ammo type or no change requested: instant refill
+            if (selected != null && selected != current) return true;
+            __instance.CurMagCount = __instance.MagSize;
+            return false;
+            // Different ammo type: let normal reload happen (unloads old, loads new - both consume/return normally)
+        }
+
+        // For pawn infiniteAmmo and infiniteReserve, let the normal reload flow happen
+        // (TryUnload and LoadAmmo are patched to not consume/return ammo for pawns)
         return true;
     }
 }
@@ -145,9 +186,17 @@ public static class Patch_CompAmmoUser_HasAmmo
         
         bool isTurret = __instance.turret != null;
         
-        if (isTurret && settings.infiniteTurretAmmo)
+        if (isTurret && AmmoInventoryHelper.IsInfiniteTurret(__instance, settings))
         {
             __result = true;
+            return;
+        }
+        
+        if (isTurret && AmmoInventoryHelper.IsInfiniteMortar(__instance, settings))
+        {
+            // Mortar has infinite ammo of its currently loaded type
+            if (__instance.CurrentAmmo != null && __instance.CurMagCount > 0)
+                __result = true;
             return;
         }
         
@@ -171,12 +220,13 @@ public static class Patch_CompAmmoUser_LoadAmmo
         if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
             return true;
         
+        // For mortars and turrets: let normal LoadAmmo run (consumes ammo on load/switch)
         if (isTurret) return true;
         
         if (!settings.infiniteReserve && !settings.infiniteAmmo) return true;
         if (!__instance.UseAmmo) return true;
         
-        // Determine the ammo type to load
+        // For pawns with infinite ammo/reserve: don't consume inventory ammo
         AmmoDef ammoToLoad = null;
         
         if (ammo != null)
@@ -185,7 +235,6 @@ public static class Patch_CompAmmoUser_LoadAmmo
         }
         else
         {
-            // Try selected ammo first, then current ammo
             ammoToLoad = __instance.SelectedAmmo ?? __instance.CurrentAmmo;
             
             if (ammoToLoad == null && __instance.TryFindAmmoInInventory(out Thing foundAmmo))
@@ -212,29 +261,22 @@ public static class Patch_CompAmmoUser_LoadAmmo
         }
         
         __instance.CurMagCount = newMagCount;
-        
-        if (__instance.turret != null)
-        {
-            __instance.turret.SetReloading(false);
-        }
-        
+
+        __instance.turret?.SetReloading(false);
+
         // Do NOT consume the ammo Thing - skip original method entirely
         return false;
     }
 }
 
-// Patch both TryUnload overloads to prevent ammo from being returned to inventory
+// Patch TryUnload to prevent ammo from being returned to inventory (for pawns only)
 [HarmonyPatch]
 public static class Patch_CompAmmoUser_TryUnload
 {
     public static IEnumerable<MethodBase> TargetMethods()
     {
-        // Patch all TryUnload overloads
-        foreach (var method in typeof(CompAmmoUser).GetMethods(BindingFlags.Instance | BindingFlags.Public))
-        {
-            if (method.Name == nameof(CompAmmoUser.TryUnload))
-                yield return method;
-        }
+        return typeof(CompAmmoUser).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Where(method => method.Name == nameof(CompAmmoUser.TryUnload)).Cast<MethodBase>();
     }
     
     public static bool Prefix(CompAmmoUser __instance, ref bool __result)
@@ -247,15 +289,13 @@ public static class Patch_CompAmmoUser_TryUnload
         if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
             return true;
         
-        if (!isTurret && (settings.infiniteReserve || settings.infiniteAmmo))
-        {
-            // Don't give ammo back, just empty the magazine
-            __instance.CurMagCount = 0;
-            __result = true;
-            return false;
-        }
-        
-        return true;
+        // For pawns: don't give ammo back, just empty the magazine
+        if (isTurret || (!settings.infiniteReserve && !settings.infiniteAmmo)) return true;
+        __instance.CurMagCount = 0;
+        __result = true;
+        return false;
+
+        // For mortars and turrets: let normal TryUnload run (returns ammo when switching types)
     }
 }
 
@@ -272,21 +312,12 @@ public static class Patch_CompAmmoUser_TryPrepareShot
         
         if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
             return true;
-        
-        if (isTurret && settings.infiniteTurretAmmo)
-        {
-            __result = true;
-            return false;
-        }
-        
-        if (!isTurret && settings.infiniteAmmo)
-        {
-            // Always allow the shot without consuming inventory ammo
-            __result = true;
-            return false;
-        }
-        
-        return true;
+
+        if ((!isTurret || !AmmoInventoryHelper.IsInfiniteTurret(__instance, settings)) &&
+            (!isTurret || !AmmoInventoryHelper.IsInfiniteMortar(__instance, settings)) &&
+            (isTurret || !settings.infiniteAmmo)) return true;
+        __result = true;
+        return false;
     }
 }
 
@@ -303,12 +334,10 @@ public static class Patch_CompAmmoUser_MagSize
         if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
             return true;
         
-        if (isTurret && settings.infiniteTurretAmmo)
-        {
-            __result = 1;
-            return false;
-        }
-        
-        return true;
+        // Set mag size to 1 for infinite turrets (not mortars - mortars keep normal mag size)
+        if (!isTurret || !AmmoInventoryHelper.IsInfiniteTurret(__instance, settings)) return true;
+        __result = 1;
+        return false;
+
     }
 }

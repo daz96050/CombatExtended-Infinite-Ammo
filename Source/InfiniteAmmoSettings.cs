@@ -15,6 +15,7 @@ public class InfiniteAmmoSettings : ModSettings
 {
     public InfiniteAmmoMode ammoMode = InfiniteAmmoMode.InfiniteReserve;
     public bool infiniteTurretAmmo = false;
+    public bool infiniteMortarAmmo = false;
     public bool infiniteGrenades = false;
     public bool playerFactionOnly = true;
     public bool enableBalancing = false;
@@ -60,6 +61,7 @@ public class InfiniteAmmoSettings : ModSettings
         }
         
         Scribe_Values.Look(ref infiniteTurretAmmo, "infiniteTurretAmmo", false);
+        Scribe_Values.Look(ref infiniteMortarAmmo, "infiniteMortarAmmo", false);
         Scribe_Values.Look(ref infiniteGrenades, "infiniteGrenades", false);
         Scribe_Values.Look(ref playerFactionOnly, "playerFactionOnly", true);
         Scribe_Values.Look(ref enableBalancing, "enableBalancing", false);
@@ -112,6 +114,13 @@ public class InfiniteAmmoSettings : ModSettings
             "CEInfiniteAmmo_InfiniteTurretAmmo_Title".Translate(), 
             ref infiniteTurretAmmo, 
             "CEInfiniteAmmo_InfiniteTurretAmmo_Desc".Translate()
+        );
+        
+        // Infinite Mortar Ammo
+        list.CheckboxLabeled(
+            "CEInfiniteAmmo_InfiniteMortarAmmo_Title".Translate(), 
+            ref infiniteMortarAmmo, 
+            "CEInfiniteAmmo_InfiniteMortarAmmo_Desc".Translate()
         );
         
         // Infinite Grenades
