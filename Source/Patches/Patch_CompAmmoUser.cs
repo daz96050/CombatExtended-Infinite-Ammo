@@ -3,7 +3,9 @@ using Verse;
 using RimWorld;
 using CombatExtended;
 using CombatExtended.Compatibility;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace CombatExtendedInfiniteAmmo.Patches;
 
@@ -124,18 +126,8 @@ public static class Patch_CompAmmoUser_TryStartReload
             return false;
         }
         
-        if (!isTurret && settings.infiniteAmmo && __instance.HasMagazine)
-        {
-            // Set to selected ammo type (or keep current) and fill magazine
-            AmmoDef selectedAmmo = __instance.SelectedAmmo;
-            if (selectedAmmo != null)
-            {
-                __instance.CurrentAmmo = selectedAmmo;
-            }
-            __instance.CurMagCount = __instance.MagSize;
-            return false;
-        }
-        
+        // For both infiniteAmmo and infiniteReserve, let the normal reload flow happen
+        // (TryUnload and LoadAmmo are patched to not consume/return ammo)
         return true;
     }
 }
@@ -159,7 +151,7 @@ public static class Patch_CompAmmoUser_HasAmmo
             return;
         }
         
-        if (!isTurret && settings.infiniteAmmo)
+        if (!isTurret && (settings.infiniteAmmo || settings.infiniteReserve))
         {
             __result = true;
         }
@@ -179,10 +171,12 @@ public static class Patch_CompAmmoUser_LoadAmmo
         if (!AmmoInventoryHelper.IsEligibleForInfiniteAmmo(__instance, settings))
             return true;
         
-        bool useNoConsume = !isTurret && (settings.infiniteReserve || settings.infiniteAmmo);
-        if (!useNoConsume || !__instance.UseAmmo) return true;
+        if (isTurret) return true;
         
-        // Determine the ammo type to load - don't require it to be in inventory
+        if (!settings.infiniteReserve && !settings.infiniteAmmo) return true;
+        if (!__instance.UseAmmo) return true;
+        
+        // Determine the ammo type to load
         AmmoDef ammoToLoad = null;
         
         if (ammo != null)
@@ -191,17 +185,10 @@ public static class Patch_CompAmmoUser_LoadAmmo
         }
         else
         {
-            // Try selected ammo first, then current ammo, then find any
-            AmmoDef selectedAmmo = __instance.SelectedAmmo;
-            if (selectedAmmo != null)
-            {
-                ammoToLoad = selectedAmmo;
-            }
-            else if (__instance.CurrentAmmo != null)
-            {
-                ammoToLoad = __instance.CurrentAmmo;
-            }
-            else if (__instance.TryFindAmmoInInventory(out Thing foundAmmo))
+            // Try selected ammo first, then current ammo
+            ammoToLoad = __instance.SelectedAmmo ?? __instance.CurrentAmmo;
+            
+            if (ammoToLoad == null && __instance.TryFindAmmoInInventory(out Thing foundAmmo))
             {
                 ammoToLoad = foundAmmo.def as AmmoDef;
             }
@@ -209,8 +196,10 @@ public static class Patch_CompAmmoUser_LoadAmmo
         
         if (ammoToLoad == null) return true;
         
+        // Set ammo type without consuming anything
         __instance.CurrentAmmo = ammoToLoad;
         
+        // Fill the magazine
         int newMagCount;
         if (__instance.Props.reloadOneAtATime)
         {
@@ -229,16 +218,27 @@ public static class Patch_CompAmmoUser_LoadAmmo
             __instance.turret.SetReloading(false);
         }
         
+        // Do NOT consume the ammo Thing - skip original method entirely
         return false;
     }
 }
 
-[HarmonyPatch(typeof(CompAmmoUser), nameof(CompAmmoUser.TryUnload), new[] { typeof(Thing), typeof(bool) }, new[] { ArgumentType.Out, ArgumentType.Normal })]
+// Patch both TryUnload overloads to prevent ammo from being returned to inventory
+[HarmonyPatch]
 public static class Patch_CompAmmoUser_TryUnload
 {
-    public static bool Prefix(CompAmmoUser __instance, out Thing droppedAmmo, bool forceUnload, ref bool __result)
+    public static IEnumerable<MethodBase> TargetMethods()
     {
-        droppedAmmo = null;
+        // Patch all TryUnload overloads
+        foreach (var method in typeof(CompAmmoUser).GetMethods(BindingFlags.Instance | BindingFlags.Public))
+        {
+            if (method.Name == nameof(CompAmmoUser.TryUnload))
+                yield return method;
+        }
+    }
+    
+    public static bool Prefix(CompAmmoUser __instance, ref bool __result)
+    {
         var settings = CombatExtendedInfiniteAmmoMod.Settings;
         if (settings == null) return true;
         
@@ -249,6 +249,7 @@ public static class Patch_CompAmmoUser_TryUnload
         
         if (!isTurret && (settings.infiniteReserve || settings.infiniteAmmo))
         {
+            // Don't give ammo back, just empty the magazine
             __instance.CurMagCount = 0;
             __result = true;
             return false;

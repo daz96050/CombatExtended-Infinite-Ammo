@@ -56,7 +56,7 @@ public class InfiniteAmmoSettings : ModSettings
         }
         else
         {
-            Scribe_Values.Look(ref ammoMode, "ammoMode", InfiniteAmmoMode.Off);
+            Scribe_Values.Look(ref ammoMode, "ammoMode");
         }
         
         Scribe_Values.Look(ref infiniteTurretAmmo, "infiniteTurretAmmo", false);
