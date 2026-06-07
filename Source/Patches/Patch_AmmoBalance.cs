@@ -15,6 +15,17 @@ public static class AmmoBalanceManager
     private static bool isBalanced = false;
     private static bool stacksLimited = false;
     
+    /// <summary>
+    /// Returns the original stack limit for a ThingDef before balance changes were applied.
+    /// Returns -1 if the def was never modified.
+    /// </summary>
+    public static int GetOriginalStackLimit(ThingDef def)
+    {
+        if (def != null && originalStackLimits.TryGetValue(def, out int original))
+            return original;
+        return -1;
+    }
+    
     private class StockGeneratorOriginalData
     {
         public IntRange countRange;
