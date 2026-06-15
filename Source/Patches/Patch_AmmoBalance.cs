@@ -3,7 +3,6 @@ using RimWorld;
 using CombatExtended;
 using HarmonyLib;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace CombatExtendedInfiniteAmmo.Patches;
 
@@ -180,62 +179,27 @@ public static class Patch_AmmoInjector_ApplyBalance
 [HarmonyPatch(typeof(GenSpawn), nameof(GenSpawn.Spawn), new[] { typeof(Thing), typeof(IntVec3), typeof(Map), typeof(Rot4), typeof(WipeMode), typeof(bool), typeof(bool) })]
 public static class Patch_GenSpawn_Spawn
 {
-    private static Dictionary<Map, Dictionary<ThingDef, int>> recentAmmoSpawns = new Dictionary<Map, Dictionary<ThingDef, int>>();
-    private static int lastTick = -1;
-    
-    public static bool Prefix(Thing newThing, IntVec3 loc, Map map, ref Thing __result)
+    public static void Prefix(Thing newThing)
     {
         var settings = CombatExtendedInfiniteAmmoMod.Settings;
         if (settings is not { enableBalancing: true } || !settings.limitAmmoSpawns) 
-            return true;
+            return;
         
-        if (newThing?.def is not AmmoDef ammoDef)
-            return true;
+        if (newThing?.def is not AmmoDef)
+            return;
         
         // Don't interfere with ammo that is currently held in a container (transfers between inventories)
         if (newThing.holdingOwner != null)
-            return true;
+            return;
         
-        // Don't limit spawns for player faction — check if this is a player-owned item
-        // Player pawns dropping ammo on purpose (e.g., drop command) should not be blocked
-        // We detect player drops by checking the map's lister for nearby player pawns
-        // However, for simplicity: only limit non-player-faction ammo drops
-        // Skip entirely if not in active game
-        if (Find.TickManager == null || Current.ProgramState != ProgramState.Playing)
-            return true;
-        
-        int currentTick = Find.TickManager.TicksGame;
-        if (currentTick != lastTick)
-        {
-            recentAmmoSpawns.Clear();
-            lastTick = currentTick;
-        }
-        
-        if (!recentAmmoSpawns.TryGetValue(map, out var mapSpawns))
-        {
-            mapSpawns = new Dictionary<ThingDef, int>();
-            recentAmmoSpawns[map] = mapSpawns;
-        }
-        
-        int count = mapSpawns.GetValueOrDefault(ammoDef, 0);
-        
-        // Allow only 1 stack of each ammo type to spawn per tick
-        if (count >= 1)
-        {
-            newThing.Destroy();
-            __result = null;
-            return false;
-        }
-        
-        // Limit to single round
+        // Cap stack count to 1 - the actual quantity limiting is handled at the source:
+        // - NPC inventory: Patch_PawnInventoryGenerator_GenerateInventoryFor
+        // - Quest rewards: Patch_QuestRewards_InitFromValue / Patch_ThingSetMaker_Generate
+        // - Traders: AmmoBalanceManager stock generator limits
         if (newThing.stackCount > 1)
         {
             newThing.stackCount = 1;
         }
-        
-        mapSpawns[ammoDef] = count + 1;
-        
-        return true;
     }
 }
 
