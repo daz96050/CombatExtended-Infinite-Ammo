@@ -33,6 +33,31 @@ With ammo balancing enabled, the mod now provides a much more balanced experienc
 
 Recommended setup: **Infinite Reserve** mode with all **Ammo Balancing** settings enabled. This gives you realistic reloading with infinite reserve ammo, while keeping the economy intact.
 
+### Key Distinction
+| Behavior | Infinite Ammo | Infinite Reserve |
+|----------|--------------|-----------------|
+| Magazine depletes on shot | No | Yes |
+| Reload animation plays | No | Yes |
+| Ammo consumed from inventory on reload | No | No |
+| Ammo returned to inventory on unload | No | No |
+| Loadout keeps real ammo in inventory | No (not needed) | Yes |
+| Loadout counts magazine as inventory | Should NOT (patched out) | Yes (CE default) |
+
+### Infinite Turret Ammo
+- Applies to all turrets **except** mortars.
+- The turret magazine **never depletes**. Shots do not reduce `CurMagCount`.
+- If a reload is triggered, the magazine is instantly refilled (no reload animation/delay).
+- Magazine size is forced to 1 (effectively always has a round ready).
+- `HasAmmo` always returns true.
+
+### Infinite Mortar Ammo
+- Applies only to mortars (`turret.def.building.IsMortar`).
+- The mortar magazine **never depletes** while firing the same ammo type.
+- If a reload is triggered with the **same** ammo type selected, the magazine is instantly refilled.
+- If a **different** ammo type is selected, the normal reload flow runs (consumes new ammo, returns old) to allow ammo switching.
+- `HasAmmo` returns true only when ammo is currently loaded (`CurrentAmmo != null && CurMagCount > 0`).
+- Magazine size is **not** overridden (keeps normal mortar mag size).
+
 ## Compatibility
 Compatible with all CE weapon/ammo mods.
 Probably incompatible with mods that changes stack sizes. If there are problems, try turning off certain settings.
