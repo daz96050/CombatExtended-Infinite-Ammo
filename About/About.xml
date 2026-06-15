@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-    <name>Combat Extended - Infinite Ammo</name>
-    <author>Stoneman</author>
-    <url>https://github.com/stoneman2/CombatExtended-Infinite-Ammo</url>
-    <packageId>Stoneman.CombatExtendedInfiniteAmmo</packageId>
+    <name>Combat Extended - Infinite Ammo (Continued)</name>
+    <author>daz96050</author>
+    <packageId>daz96050.CombatExtendedInfiniteAmmo</packageId>
     <supportedVersions>
         <li>1.6</li>
     </supportedVersions>
-    <modVersion>1.1.1</modVersion>
+    <modVersion>1.1.4</modVersion>
     <modIconPath IgnoreIfNoMatchingField="True">UI/Icons/CE_ModIcon_JustHat</modIconPath>
     <description>Infinite ammo!
 
@@ -36,4 +35,7 @@ Requires Combat Extended to function.
     <loadAfter>
         <li>CETeam.CombatExtended</li>
     </loadAfter>
+    <incompatibleWith>
+        <li>Stoneman.CombatExtendedInfiniteAmmo</li>
+    </incompatibleWith>
 </ModMetaData>

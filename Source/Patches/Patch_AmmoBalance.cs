@@ -274,3 +274,60 @@ public static class Patch_ThingOwner_TryAdd
         }
     }
 }
+
+/// <summary>
+/// Patches Pawn_InventoryTracker.DropAllNearPawn to limit ammo drops from non-player pawns.
+/// When a guest/visitor/allied pawn dies or is downed, they may have accumulated many ammo stacks.
+/// This prevents them from littering the map with dozens of individual ammo items.
+/// Only keeps up to 1 stack of each ammo type when dropping.
+/// </summary>
+[HarmonyPatch(typeof(Pawn_InventoryTracker), nameof(Pawn_InventoryTracker.DropAllNearPawn))]
+public static class Patch_DropAllNearPawn
+{
+    private const int MaxAmmoDropsPerType = 1;
+    
+    public static void Prefix(Pawn_InventoryTracker __instance)
+    {
+        var settings = CombatExtendedInfiniteAmmoMod.Settings;
+        if (settings is not { enableBalancing: true } || !settings.limitAmmoSpawns)
+            return;
+        
+        Pawn pawn = __instance.pawn;
+        if (pawn == null)
+            return;
+        
+        // Don't limit player faction pawns - they should drop all their stuff
+        if (pawn.Faction != null && pawn.Faction == Faction.OfPlayer)
+            return;
+        
+        var container = __instance.innerContainer;
+        if (container == null || container.Count == 0)
+            return;
+        
+        // Find excess ammo to remove before the drop happens
+        var ammoCounts = new Dictionary<ThingDef, int>();
+        var toRemove = new List<Thing>();
+        
+        foreach (var thing in container)
+        {
+            if (thing?.def is not AmmoDef)
+                continue;
+            
+            ammoCounts.TryGetValue(thing.def, out int count);
+            ammoCounts[thing.def] = count + 1;
+            
+            if (count + 1 > MaxAmmoDropsPerType)
+            {
+                toRemove.Add(thing);
+            }
+        }
+        
+        // Destroy excess ammo before the drop
+        foreach (var thing in toRemove)
+        {
+            container.Remove(thing);
+            thing.Destroy();
+        }
+    }
+}
+
