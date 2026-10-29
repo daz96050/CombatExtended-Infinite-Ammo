@@ -19,6 +19,10 @@
     <CEInfiniteAmmo_InfiniteReserve_Title>Infinite Reserve (With Reloading)</CEInfiniteAmmo_InfiniteReserve_Title>
     <CEInfiniteAmmo_InfiniteReserve_Desc>Weapons do not consume any ammo from the inventory but still need to reload. You have infinite reserve ammo as long as there is one in your inventory.</CEInfiniteAmmo_InfiniteReserve_Desc>
     
+    <!-- Require Ammo In Inventory -->
+    <CEInfiniteAmmo_RequireAmmo_Title>Require Ammo In Inventory</CEInfiniteAmmo_RequireAmmo_Title>
+    <CEInfiniteAmmo_RequireAmmo_Desc>When on, pawns need at least one round of an ammo type in their inventory to use it. When off, pawns can load any ammo type their weapon accepts without carrying any: pick the type from the reload button. Infinite Reserve still reloads.</CEInfiniteAmmo_RequireAmmo_Desc>
+
     <!-- Infinite Turret Ammo -->
     <CEInfiniteAmmo_InfiniteTurretAmmo_Title>Infinite Turret Ammo</CEInfiniteAmmo_InfiniteTurretAmmo_Title>
     <CEInfiniteAmmo_InfiniteTurretAmmo_Desc>Turrets (excluding mortars) never run out of ammo. They still need to be loaded once initially.</CEInfiniteAmmo_InfiniteTurretAmmo_Desc>
@@ -36,7 +40,7 @@
     <CEInfiniteAmmo_PlayerOnly_Desc>Infinite ammo settings only apply to player-controlled pawns and turrets. Enemy factions will still consume ammo normally.</CEInfiniteAmmo_PlayerOnly_Desc>
 
     <CEInfiniteAmmo_BalanceMode_Title>Enable Ammo Rebalance</CEInfiniteAmmo_BalanceMode_Title>
-    <CEInfiniteAmmo_BalanceMode_Desc>Enables balance changes for infinite ammo mode.</CEInfiniteAmmo_BalanceMode_Desc>
+    <CEInfiniteAmmo_BalanceMode_Desc>Enables balance changes for infinite ammo mode. Only affects ammo that something actually gets infinite ammo for, e.g. mortar shells are left alone unless Infinite Mortar Ammo is on.</CEInfiniteAmmo_BalanceMode_Desc>
     
     <CEInfiniteAmmo_LimitStackSize_Title>Limit Stack Size to 1</CEInfiniteAmmo_LimitStackSize_Title>
     <CEInfiniteAmmo_LimitStackSize_Desc>Sets all ammo stack limits to 1.</CEInfiniteAmmo_LimitStackSize_Desc>

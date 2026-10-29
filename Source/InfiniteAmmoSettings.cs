@@ -22,14 +22,17 @@ public class InfiniteAmmoSettings : ModSettings
     public float ammoCostMultiplier = 5f;
     public bool limitAmmoStackSize = true;
     public bool limitAmmoSpawns = true;
-    
+    public bool requireAmmoInInventory = true;
+
     // Convenience properties for backward compatibility with patch code
     public bool infiniteAmmo => ammoMode == InfiniteAmmoMode.InfiniteAmmo;
     public bool infiniteReserve => ammoMode == InfiniteAmmoMode.InfiniteReserve;
     
-    private bool _prevEnableBalancing = false;
-    private float _prevAmmoCostMultiplier = 5f;
-    private bool _prevLimitAmmoStackSize = true;
+    // Everything that changes which ammo is rebalanced, or how
+    private (bool, float, bool, InfiniteAmmoMode, bool, bool, bool) _prevBalanceInputs;
+
+    private (bool, float, bool, InfiniteAmmoMode, bool, bool, bool) BalanceInputs =>
+        (enableBalancing, ammoCostMultiplier, limitAmmoStackSize, ammoMode, infiniteTurretAmmo, infiniteMortarAmmo, infiniteGrenades);
     
     public override void ExposeData()
     {
@@ -68,10 +71,9 @@ public class InfiniteAmmoSettings : ModSettings
         Scribe_Values.Look(ref ammoCostMultiplier, "ammoCostMultiplier", 5f);
         Scribe_Values.Look(ref limitAmmoStackSize, "limitAmmoStackSize", true);
         Scribe_Values.Look(ref limitAmmoSpawns, "limitAmmoSpawns", true);
-        
-        _prevEnableBalancing = enableBalancing;
-        _prevAmmoCostMultiplier = ammoCostMultiplier;
-        _prevLimitAmmoStackSize = limitAmmoStackSize;
+        Scribe_Values.Look(ref requireAmmoInInventory, "requireAmmoInInventory", true);
+
+        _prevBalanceInputs = BalanceInputs;
     }
 
     
@@ -106,7 +108,17 @@ public class InfiniteAmmoSettings : ModSettings
         
         if (list.RadioButton("CEInfiniteAmmo_InfiniteAmmo_Title".Translate(), ammoMode == InfiniteAmmoMode.InfiniteAmmo, tooltip: "CEInfiniteAmmo_InfiniteAmmo_Desc".Translate()))
             ammoMode = InfiniteAmmoMode.InfiniteAmmo;
-        
+
+        if (ammoMode != InfiniteAmmoMode.Off)
+        {
+            list.Gap(4f);
+            list.CheckboxLabeled(
+                "CEInfiniteAmmo_RequireAmmo_Title".Translate(),
+                ref requireAmmoInInventory,
+                "CEInfiniteAmmo_RequireAmmo_Desc".Translate()
+            );
+        }
+
         list.Gap();
         
         // Infinite Turret Ammo
@@ -163,16 +175,9 @@ public class InfiniteAmmoSettings : ModSettings
         
         list.End();
         
-        bool settingsChanged = enableBalancing != _prevEnableBalancing || 
-                               ammoCostMultiplier != _prevAmmoCostMultiplier ||
-                               limitAmmoStackSize != _prevLimitAmmoStackSize;
-        
-        if (settingsChanged)
+        if (!BalanceInputs.Equals(_prevBalanceInputs))
         {
-            _prevEnableBalancing = enableBalancing;
-            _prevAmmoCostMultiplier = ammoCostMultiplier;
-            _prevLimitAmmoStackSize = limitAmmoStackSize;
-            AmmoRecipeManager.ApplyRecipeChanges();
+            _prevBalanceInputs = BalanceInputs;
             AmmoBalanceManager.ApplyBalanceChanges();
         }
     }

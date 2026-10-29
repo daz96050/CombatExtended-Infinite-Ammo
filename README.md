@@ -15,14 +15,18 @@ Please look at the original [here](https://github.com/CombatExtended-Continued/C
 ### Infinite Reserve - With Reloading
 - Toggleable.
 - Makes all guns infinite, but you have a mag size. You will still be required to reload as long as you have one ammo type in your inventory. Any ammo loaded will not be consumed from your inventory at all.
+- Weapons without a magazine (bows, etc.) shoot without using up their ammo.
+### Require Ammo In Inventory
+- On by default. Turn it off and pawns can load any ammo type their weapon accepts without carrying any: pick the type from the reload button.
 ### Infinite Turret Ammo
 - Toggleable.
 - Makes turrets have infinite ammo. You just need to load it with one round and it will be able to fire it forever.
 ### Ammo Balancing
+- Only applies to ammo that something gets infinite ammo for: mortar shells are untouched unless Infinite Mortar Ammo is on, turret-only ammo unless Infinite Turret Ammo is on, and so on.
 - Recipes now yield 1 ammo at a time with multiplier for work and resource costs.
-- Changes all ammo types to have the stack limit of 1.
-- Limits traders to sell at most 1-3 of any ammo.
-- All ammo spawns (raids, drops, inside raiders) are capped to 1.
+- Changes ammo stack limits to 1.
+- Limits traders, quest rewards and loot to a few single rounds of any ammo.
+- Generated pawns (raiders, visitors, traders, new mechs) carry at most 1 round of each ammo type.
 - All these are toggleable.
 
 ## Balance
@@ -41,7 +45,7 @@ Recommended setup: **Infinite Reserve** mode with all **Ammo Balancing** setting
 | Ammo consumed from inventory on reload | No | No |
 | Ammo returned to inventory on unload | No | No |
 | Loadout keeps real ammo in inventory | No (not needed) | Yes |
-| Loadout counts magazine as inventory | Should NOT (patched out) | Yes (CE default) |
+| Loadout counts magazine as inventory | No (patched out) | No (patched out: loading is free, so counting it makes pawns drop "excess" ammo) |
 
 ### Infinite Turret Ammo
 - Applies to all turrets **except** mortars.

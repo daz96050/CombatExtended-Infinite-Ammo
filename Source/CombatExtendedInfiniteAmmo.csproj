@@ -1,25 +1,56 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    One build per game version, selected at load time by ../LoadFolders.xml:
+      net48     -> RimWorld 1.6 (Mono/Unity), compiled against the Krafs 1.6 reference assemblies
+      net10.0   -> RimWorld 1.7 (Waylith CLR), compiled against the installed game's own assemblies
+  -->
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <LangVersion>12.0</LangVersion>
     <AssemblyName>CombatExtendedInfiniteAmmo</AssemblyName>
     <RootNamespace>CombatExtendedInfiniteAmmo</RootNamespace>
-    <OutputPath>..\Assemblies\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup>
     <CombatExtendedPath>..\..\CombatExtended\Assemblies</CombatExtendedPath>
+    <!-- RimWorld 1.7 install folder (contains Assembly-CSharp.dll and UnityStubs.dll) -->
+    <RimWorld17Path>..\..\..</RimWorld17Path>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <OutputPath>..\1.6\Assemblies\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <OutputPath>..\1.7\Assemblies\</OutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4543" GeneratePathProperty="true" />
     <PackageReference Include="Lib.Harmony" Version="2.3.6" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4543" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RimWorld17Path)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityStubs">
+      <HintPath>$(RimWorld17Path)\UnityStubs.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

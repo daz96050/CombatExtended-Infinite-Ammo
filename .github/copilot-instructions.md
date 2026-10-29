@@ -28,7 +28,7 @@ This is a RimWorld mod that patches CombatExtended's ammo system using Harmony. 
 | Ammo consumed from inventory on reload | No | No |
 | Ammo returned to inventory on unload | No | No |
 | Loadout keeps real ammo in inventory | No (not needed) | Yes |
-| Loadout counts magazine as inventory | Should NOT (patched out) | Yes (CE default) |
+| Loadout counts magazine as inventory | No (patched out) | No (patched out: loading is free, so counting it makes pawns drop "excess" ammo) |
 
 ### Infinite Turret Ammo
 - Applies to all turrets **except** mortars.

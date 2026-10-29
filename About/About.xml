@@ -5,8 +5,9 @@
     <packageId>daz96050.CombatExtendedInfiniteAmmo</packageId>
     <supportedVersions>
         <li>1.6</li>
+        <li>1.7</li>
     </supportedVersions>
-    <modVersion>1.1.4</modVersion>
+    <modVersion>1.2.0</modVersion>
     <modIconPath IgnoreIfNoMatchingField="True">UI/Icons/CE_ModIcon_JustHat</modIconPath>
     <description>Infinite ammo!
 
@@ -14,13 +15,19 @@ This mod adds different variants of infinite ammo to more match the base game. T
 This does make the game significantly easier, but can be fun.
 
 Features:
-- Infinite Ammo (No Reloading) 
-- Infinite Reserve (With Reloading) 
-- Infinite Turret Ammo 
+- Infinite Ammo (No Reloading)
+- Infinite Reserve (With Reloading), including bows and other weapons without a magazine
+- Optional: no ammo needed at all, just pick the ammo type from the reload button
+- Infinite Turret Ammo
+- Infinite Mortar Ammo
 - Infinite Grenades
 - Player Faction Only option
-- Limit ammo stacks to 1
-- Only spawn 1 of any ammo from spawns.
+- Optional rebalance, applied only to ammo that something gets infinite ammo for:
+  - Ammo recipes make 1 round at a multiplied cost
+  - Limit ammo stacks to 1
+  - Generated pawns, traders, quest rewards and loot carry or offer only a few single rounds
+
+Supports RimWorld 1.6 and 1.7.
 
 Load this mod AFTER Combat Extended.
 

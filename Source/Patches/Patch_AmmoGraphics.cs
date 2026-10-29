@@ -19,13 +19,8 @@ public static class Patch_Graphic_StackCount_SubGraphicForStackCount
         if (settings is not { enableBalancing: true } || !settings.limitAmmoStackSize)
             return;
         
-        if (def == null) return;
-        
-        int stackLimit = def.stackLimit;
-        
-        // When stackLimit is 1 (which we set for ammo), force full-stack appearance.
-        // Non-ammo items with natural stackLimit of 1 (weapons, apparel) don't use Graphic_StackCount.
-        if (stackLimit <= 1)
+        // When stackLimit is 1 (which we set for rebalanced ammo), force full-stack appearance.
+        if (def is { stackLimit: <= 1 } && AmmoBalanceManager.IsBalanced(def))
         {
             // Set stackCount high to trigger the highest sub-graphic tier
             stackCount = 75;
